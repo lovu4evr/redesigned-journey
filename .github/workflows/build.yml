@@ -13,8 +13,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Extract ApexPrime.zip
-        run: unzip -o ApexPrime.zip
+      - name: Extract ApexPrime (1).zip
+        run: unzip -o ApexPrime (1).zip
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
