@@ -24,27 +24,27 @@ jobs:
           # Fix 1: Cleanly add animation.core.* right after package declaration in ChatScreen.kt
           p1 = "ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatScreen.kt"
           txt1 = open(p1).read()
-          txt1 = re.sub(
-              r"(package\s+[^\n]+\n)",
-              r"\1import androidx.compose.animation.core.*\n",
-              txt1,
-              count=1
-          )
-          open(p1, "w").write(txt1)
+          if "import androidx.compose.animation.core.*" not in txt1:
+              txt1 = re.sub(
+                  r"(package\s+[^\n]+\n)",
+                  r"\1import androidx.compose.animation.core.*\n",
+                  txt1,
+                  count=1
+              )
+              open(p1, "w").write(txt1)
 
-          # Fix 2: Fix 'it' reference on line 47 of ChatViewModel.kt
+          # Fix 2: Define currentId or fix reference in ChatViewModel.kt
           p2 = "ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatViewModel.kt"
-          lines = open(p2).read().splitlines()
-          for i in range(max(0, 38), min(len(lines), 47)):
-              m = re.search(r"\{\s*([a-zA-Z0-9_]+)\s*->", lines[i])
-              if m:
-                  param = m.group(1)
-                  lines[46] = re.sub(r"\bit\b", param, lines[46])
-                  break
-          else:
-              lines[46] = re.sub(r"\bit\.message\b", "\"Error\"", lines[46])
-              lines[46] = re.sub(r"\bit\b", "Exception(\"Error\")", lines[46])
-          open(p2, "w").write("\n".join(lines) + "\n")
+          txt2 = open(p2).read()
+          if "currentId" not in txt2:
+              # Inject a dummy currentId property if missing
+              txt2 = re.sub(
+                  r"(class\s+ChatViewModel[^{]+\{)",
+                  r"\1\n    private val currentId: String = \"\"\n",
+                  txt2,
+                  count=1
+              )
+          open(p2, "w").write(txt2)
           EOF
 
       - name: Set up JDK 17
@@ -68,3 +68,4 @@ jobs:
           name: ApexPrime-APK
           path: ApexPrime/app/build/outputs/apk/debug/app-debug.apk
           
+  
