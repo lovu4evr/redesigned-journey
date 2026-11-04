@@ -14,7 +14,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Extract ApexPrime zip
-        run: unzip -o "ApexPrime (1).zip"
+        run: |
+          ZIP=$(ls -t ApexPrime*.zip | head -n 1)
+          echo "Using: $ZIP"
+          unzip -o "$ZIP"
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
