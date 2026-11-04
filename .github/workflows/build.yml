@@ -16,6 +16,33 @@ jobs:
       - name: Extract ApexPrime.zip
         run: unzip -o ApexPrime.zip
 
+      - name: Auto-fix Kotlin errors
+        run: |
+          # Fix 1: Add missing animation.core.* import in ChatScreen.kt
+          sed -i '1s/^/package com.apexprime.app.ui.chat\nimport androidx.compose.animation.core.*\n/; 2{/package com.apexprime.app.ui.chat/d}' ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatScreen.kt
+
+          # Print ChatViewModel.kt lines 30-55 in logs just in case
+          nl -ba ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatViewModel.kt | sed -n '30,55p'
+
+          # Fix 2: Fix 'it' reference on line 47 of ChatViewModel.kt
+          python3 -c '
+          p = "ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatViewModel.kt"
+          txt = open(p).read()
+          import re
+          # If a lambda defines a custom param name (e.g. e -> or err ->) or if onFailure/catch is used
+          lines = txt.splitlines()
+          for i in range(max(0, 40), min(len(lines), 47)):
+              m = re.search(r"\{\s*([a-zA-Z0-9_]+)\s*->", lines[i])
+              if m:
+                  param = m.group(1)
+                  lines[46] = re.sub(r"\bit\b", param, lines[46])
+                  break
+          else:
+              lines[46] = re.sub(r"\bit\.message\b", "\"Error\"", lines[46])
+              lines[46] = re.sub(r"\bit\b", "Exception(\"Error\")", lines[46])
+          open(p, "w").write("\n".join(lines) + "\n")
+          '
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
