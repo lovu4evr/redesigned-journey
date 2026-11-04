@@ -16,56 +16,26 @@ jobs:
       - name: Extract ApexPrime.zip
         run: unzip -o ApexPrime.zip
 
-      - name: Auto-fix Kotlin errors
-        run: |
-          python3 - << 'EOF'
-          import re
-
-          # Fix 1: Cleanly add animation.core.* right after package declaration in ChatScreen.kt
-          p1 = "ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatScreen.kt"
-          txt1 = open(p1).read()
-          if "import androidx.compose.animation.core.*" not in txt1:
-              txt1 = re.sub(
-                  r"(package\s+[^\n]+\n)",
-                  r"\1import androidx.compose.animation.core.*\n",
-                  txt1,
-                  count=1
-              )
-              open(p1, "w").write(txt1)
-
-          # Fix 2: Define currentId or fix reference in ChatViewModel.kt
-          p2 = "ApexPrime/app/src/main/java/com/apexprime/app/ui/chat/ChatViewModel.kt"
-          txt2 = open(p2).read()
-          if "currentId" not in txt2:
-              # Inject a dummy currentId property if missing
-              txt2 = re.sub(
-                  r"(class\s+ChatViewModel[^{]+\{)",
-                  r"\1\n    private val currentId: String = \"\"\n",
-                  txt2,
-                  count=1
-              )
-          open(p2, "w").write(txt2)
-          EOF
-
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
 
       - name: Build Debug APK
         working-directory: ./ApexPrime
-        run: gradle assembleDebug
+        run: gradle assembleDebug --stacktrace
 
       - name: Upload Compiled APK
         uses: actions/upload-artifact@v4
         with:
           name: ApexPrime-APK
           path: ApexPrime/app/build/outputs/apk/debug/app-debug.apk
-          
-  
